@@ -124,6 +124,8 @@ To deploy Symphony sample portal, review the `eclipse-symphony/portal/opera-depl
 kubectl apply -f opera-deployment.yaml
 ```
 
+> **NOTE:** If you are using Minikube, you need to change service type to `ClusterIP`, and use `kubectl port-forward` to access the portal via port-forwarding, as Minikube isn't able to allocate a public IP.
+
 ## Docking a Mock Truck
 To test out the docking workflow, you can create an `Activation` object to activate the above `Campaign`. For example, the following activation activates the docking workflow using the `mock-truck` template:
 
