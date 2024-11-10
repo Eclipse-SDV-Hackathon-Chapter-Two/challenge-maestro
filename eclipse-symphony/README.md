@@ -117,7 +117,12 @@ kubectl apply -f docking.yaml
 
 ## Deploy Symphony Sample Portal (Opera)
 
-TBD
+To deploy Symphony sample portal, review the `eclipse-symphony/portal/opera-deployment.yaml` file. Especially, if you want to use OpenAI features, you need to set `OPENAI_API_KEY` to your OpenAI API key. Then, you can deploy the portal using `kubectl`:
+
+```bash
+# under eclipse-symphony/portal folder
+kubectl apply -f opera-deployment.yaml
+```
 
 ## Docking a Mock Truck
 To test out the docking workflow, you can create an `Activation` object to activate the above `Campaign`. For example, the following activation activates the docking workflow using the `mock-truck` template:
