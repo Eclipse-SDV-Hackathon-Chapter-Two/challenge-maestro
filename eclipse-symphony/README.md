@@ -38,7 +38,7 @@ And once maestro is installed, you can use this command to install Symphony to y
 ```bash
 maestro up
 ```
-> **NOTE:** If you don't have a current K8s context, maestro can install Minikube on your machine first and then install Symphony.
+> **NOTE:** If you don't have a current K8s context, maestro can install Minikube on your machine first and then install Symphony. Because Minikube can't assign a public IP, the post-command condition check will fail. Use `Ctrl+C` to stop the command. You'll still be able to access Symphony using `kubectl`.
 
 ### Using Helm
 Alternatively, you can use Helm (v3) to install Symphony on to a Kubernetes cluster such as [AKS](https://learn.microsoft.com/en-us/azure/aks/), [K3s](https://k3s.io/) and [Minikube](https://minikube.sigs.k8s.io/docs/):
@@ -61,7 +61,7 @@ You can follow instructions [here](https://github.com/eclipse-symphony/symphony/
 In this hackathon, we'll use a MQTT broker to facilitate communication between Symphony and the remote agent, which you'll run from your machine or on your target device. 
 We offer a sample deployment file at `eclispe-symphony/mosquitto/mosquitto.yaml`, which you can use to deploy a [mosquitto](https://mosquitto.org/) test MQTT broker with anoymous access enabled. 
 ```bash
-kubectl apply -f mosquitto/mosquitto.yaml
+kubectl apply -f eclipse-symphony/mosquitto/mosquitto.yaml
 ```
 Once deployment is complete, you should see a `mosquitto-service` service in your service list. This will the broker your agents connect to.
 ```bash
@@ -70,6 +70,11 @@ NAME                TYPE           CLUSTER-IP     EXTERNAL-IP       PORT(S)
 ...
 mosquitto-service   LoadBalancer   10.0.231.136   172.179.118.100   1883:32640/TCP
 ...
+```
+
+If you are using Minikube, you'll need to use K8s port forwarding to expose the service to your local machine. Then, you'll be able to access the MQTT broker through `tcp://localhost:1883`.
+```
+kubectl port-forward svc/mosquitto-service 1883:1883
 ```
 
 ## Prepare Truck Templates
@@ -86,8 +91,7 @@ Except for the `mock-truck`, all truck templates are configured to use a MQTT Ta
 
  To provision these templates, simply use the kubectl command from the `truck-templates` folder:
 ```bash
-# under eclispe-symphony/truck-templates folder:
-kubectl apply -f .
+kubectl apply -f eclipse-symphony/truck-templates/.
 ```
 Once the Catalogs are provisioned, you can use `kubectl` to list them out (Each `Catalog` belongs to a `CatalogContainer`, which can contain multiple versions of the `Catalog`):
 ```bash
@@ -108,11 +112,12 @@ mock-truck-v-v1      5m36s
 reefer-truck-v-v1    106s
 ```
 
+> **NOTE:** If you are using a local mosquitto broker, you need to update `brokerAddress` in the templates to `tcp://localhost:1883`. 
+
 ## Prepare Truck Docking Workflow
 The truck docking workflow is defined as a Symphony `Campaign` object. To define the docker working flow:
 ```kubectl
-# under eclipse-symphony/workflows folder:
-kubectl apply -f docking.yaml
+kubectl apply -f eclipse-symphony/workflows/docking.yaml
 ```
 
 ## Deploy Symphony Sample Portal (Opera)
@@ -120,11 +125,13 @@ kubectl apply -f docking.yaml
 To deploy Symphony sample portal, review the `eclipse-symphony/portal/opera-deployment.yaml` file. Especially, if you want to use OpenAI features, you need to set `OPENAI_API_KEY` to your OpenAI API key. Then, you can deploy the portal using `kubectl`:
 
 ```bash
-# under eclipse-symphony/portal folder
-kubectl apply -f opera-deployment.yaml
+kubectl apply -f eclipse-symphony/portal/opera-deployment.yaml
 ```
 
-> **NOTE:** If you are using Minikube, you need to change service type to `ClusterIP`, and use `kubectl port-forward` to access the portal via port-forwarding, as Minikube isn't able to allocate a public IP.
+If you are using Minikube, you'll need to use K8s port forwarding to expose the service to your local machine.
+```bash
+kubectl port-forward svc/opera-service 3000:3000
+```
 
 ## Docking a Mock Truck
 To test out the docking workflow, you can create an `Activation` object to activate the above `Campaign`. For example, the following activation activates the docking workflow using the `mock-truck` template:
@@ -144,21 +151,67 @@ To apply the activation, use `kubectl`:
 ```bash
 kubectl apply -f <your activation file>
 ```
+> **NOTE:** You can use the provided `*-activation.yaml` files to activate the workflow for different truck types.
 
 > **NOTE:** Once an activation is created it can't be updated, as it serves as workflow executiong record. To re-activate a campaign, you'll need to re-create the activation object (by deleting it and recreating it), or to create a new activation object.
 
-## Launching a Symphony Agent
-You can launch a Symphony Agent using `maestro` (see [Installing Symphony](#installing-symphony) section for instructions to install `maestro` using a single command).
-When launching the agent with MQTT binding, you need to supply a few parameters:
+If you've activated the workflow for all truck templates, you should see a number of `Target` objects created:
+```bash
+kubectl get target
+
+NAME            STATUS
+box-truck       Succeeded
+flatbed-truck   Succeeded
+mock-truck      Succeeded
+reefer-truck    Succeeded
+```
+You can also see these targets on the Opera targets view if you've deployed Opera:
+![opera](../docs/diagrams/opera-targets.png)
+
+
+## Generating a Symphony Agent Configuration
+You can generate a Symphony Agent configuration file using `maestro` (see [Installing Symphony](#installing-symphony) section for instructions to install `maestro` using a single command).
+
+Run `maestro` with the following paramters:
 | Parameter | Value |
 |--------|--------|
-| `mqtt-broker` | MQTT broker address. If you've deployed MQTT broker as instructed above, you should set this value to the public IP of your `mosquitto-service`, for example `TCP://172.179.118.110:1883`. |
-| `mqtt-client-id` | An unique MQTT client id of your choice. |
-| `target` | Symphony Target object name that this agent represents. This needs to match with the Symphony Target object name. |
+| `--mqtt-broker` | MQTT broker address. If you've deployed MQTT broker as instructed above, you should set this value to the public IP of your `mosquitto-service`, for example `tcp://172.179.118.110:1883` or `tcp://localhost:1883`. |
+| `--mqtt-client-id` | An unique MQTT client id of your choice. |
+| `--target` | Symphony Target object name that this agent represents. This needs to match with the Symphony Target object name. |
+| `--config-only` | Use this flag to generate the configuration file only. Otherwise, the agent will be directly launched. |
 
 For example:
 ```bash
-maestro agent --mqtt-broker TCP://172.179.118.110:1883 --mqtt-client-id mock-truck --target mock-truck
+maestro agent --mqtt-broker tcp://172.179.118.110:1883 --mqtt-client-id box-truck --target box-truck --config-only
+```
+The above command generates a `symphony-agent-box-truck.json` file under the `<you home>/.symphony` folder. We also provides sample agent configuration files under the `eclipse-symphony/agent` folder for your reference.
+
+## Customizing the Agent Configuration File
+
+By default, the generated agent configuration file uses a mock Target provider (providers.target.mock). You can switch to a different Target Provider as needed - such as using a script provider, a Docker provider, or a custom provider (requires rebuild Symphony binary).
+
+For example, instead of the default mock provider:
+```json
+"box-truck": {
+  "type": "providers.target.mock",
+  "config": {}
+},
+```
+You can switch to a Docker provider:
+```json
+"box-truck": {
+  "type": "providers.target.docker",
+  "config": {}
+},
 ```
 
-> **NOTE:** You can use a `--config-only` to generate the Agent configuration file only.
+
+## Launching the Agent
+
+Once you've created the customized agent configuration file, you can launch a new instance of Symphony Agent through command line:
+
+```bash
+~/.symphony/symphony-api -c <your agent configuration file> -l Debug
+# for example
+~/.symphony/symphony-api -c ~/.symphony/symphony-agent-box-truck.json -l Debug
+```

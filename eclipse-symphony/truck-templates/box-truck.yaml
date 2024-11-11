@@ -1,19 +1,21 @@
 apiVersion: federation.symphony/v1
 kind: CatalogContainer
 metadata:
-  name: flatbed-truck
+  name: box-truck
 spec:  
 ---
 apiVersion: federation.symphony/v1
 kind: Catalog
 metadata:
-  name: flatbed-truck-v-v1
+  name: box-truck-v-v1
 spec: 
-  rootResource: flatbed-truck
+  rootResource: box-truck
   catalogType: target
   properties:
+    metadata:
+      name: box-truck
     spec: 
-      displayName: flatbed-truck
+      displayName: box-truck
       topologies:
       - bindings:
         - role: instance
@@ -21,17 +23,17 @@ spec:
           config:
             name: mqtt-proxy
             brokerAddress: tcp://mosquitto-service:1883
-            clientID: office-3
+            clientID: office-2
             requestTopic: coa-request
-            responseTopic: coa-response
-            timeoutSeconds: 30
+            responseTopic: coa-response            
       properties:
+        image.url: box-truck
         driver: mike
-        capacity: 100
-        temperature: -18
-        weight: 1000
-        fuel: 100
+        capacity: "100"
+        temperature: "-18"
+        weight: "1000"
+        fuel: "100"
         status: available
-        location: 0,0
-        destination: 0,0  
+        location: "0,0"
+        destination: "0,0"
         

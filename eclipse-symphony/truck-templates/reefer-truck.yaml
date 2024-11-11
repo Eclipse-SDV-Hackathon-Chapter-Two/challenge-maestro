@@ -12,6 +12,8 @@ spec:
   rootResource: reefer-truck
   catalogType: target
   properties:
+    metadata:
+      name: reefer-truck
     spec: 
       displayName: reefer-truck
       topologies:
@@ -23,15 +25,15 @@ spec:
             brokerAddress: tcp://mosquitto-service:1883
             clientID: office-1
             requestTopic: coa-request
-            responseTopic: coa-response
-            timeoutSeconds: 30
+            responseTopic: coa-response            
       properties:
+        image.url: freezer-truck
         driver: mike
-        capacity: 100
-        temperature: -18
-        weight: 1000
-        fuel: 100
+        capacity: "100"
+        temperature: "-18"
+        weight: "1000"
+        fuel: "100"
         status: available
-        location: 0,0
-        destination: 0,0  
+        location: "0,0"
+        destination: "0,0"
         

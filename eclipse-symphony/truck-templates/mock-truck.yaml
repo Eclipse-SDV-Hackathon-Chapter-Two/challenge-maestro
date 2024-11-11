@@ -21,6 +21,7 @@ spec:
         - role: instance
           provider: providers.target.mock
       properties:
+        image.url: mock-truck
         driver: joe
         capacity: "100"
         temperature: "-18"
