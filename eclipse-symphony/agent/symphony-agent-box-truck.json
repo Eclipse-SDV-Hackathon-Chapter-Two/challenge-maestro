@@ -1,0 +1,67 @@
+{
+  "siteInfo": {
+    "siteId": "hq",
+    "currentSite": {
+      "baseUrl": "",
+      "username": "",
+      "password": ""
+    }
+  },
+  "api": {
+    "vendors": [
+      {
+        "type": "vendors.echo",
+        "route": "greetings",
+        "managers": []
+      },
+      {
+        "type": "vendors.solution",
+        "route": "solution",
+        "loopInterval": 15,
+        "managers": [
+          {
+            "name": "solution-manager",
+            "type": "managers.symphony.solution",
+            "properties": {
+              "providers.persistentstate": "mem-state",
+              "isTarget": "true",
+              "targetNames": "box-truck",
+              "providers.config": "mock-config",
+              "providers.secret": "mock-secret",
+              "poll.enabled": "true"
+            },
+            "providers": {
+              "box-truck": {
+                "type": "providers.target.mock",
+                "config": {}
+              },
+              "mem-state": {
+                "type": "providers.state.memory",
+                "config": {}
+              },
+              "mock-config": {
+                "type": "providers.config.mock",
+                "config": {}
+              },
+              "mock-secret": {
+                "type": "providers.secret.mock",
+                "config": {}
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "bindings": [
+    {
+      "type": "bindings.mqtt",
+      "config": {
+        "brokerAddress": "tcp://172.179.118.110:1883",
+        "clientID": "box-truck",
+        "requestTopic": "coa-request",
+        "responseTopic": "coa-response"
+      }
+    }
+  ]
+}
