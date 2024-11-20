@@ -1,0 +1,10 @@
+apiVersion: solution.symphony/v1
+kind: Instance
+metadata:
+  name: box-instance
+spec:
+  solution: box-truck-app:v1
+  target: 
+    name: box-truck
+  reconciliationPolicy:
+    interval: 1m

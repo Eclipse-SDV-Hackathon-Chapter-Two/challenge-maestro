@@ -49,7 +49,7 @@ helm install symphony oci://ghcr.io/eclipse-symphony/helm/symphony --version '0.
 > **NOTE:** For this hackathon, make sure to use the **0.48.32** version.
 
 
-## Basic Usage of Symphony
+## Basic usage of Symphony
 
 Once you've installed Symphony, you can use standard K8s tools like `kubectl` to interact with Symphony. Essentially, you need to create `Solution` objects that describe your applications, `Target` objects that describe your infrastructure, and `Instance` objects that describe an deployment, which maps a `Solution` to one mor multiple `Target`s. 
 
@@ -57,7 +57,7 @@ A `Solution` is comprised of one or multiple `Component`, and each `Component` h
 
 You can follow instructions [here](https://github.com/eclipse-symphony/symphony/blob/main/docs/symphony-book/get-started/deploy_prometheus_k8s.md) to deploying a hello-world solution to K8s using Symphony. And additional scenarios can be found [here](https://github.com/eclipse-symphony/symphony/tree/main/docs).
 
-## Deploy a MQTT Broker
+## Deploy a MQTT broker
 In this hackathon, we'll use a MQTT broker to facilitate communication between Symphony and the remote agent, which you'll run from your machine or on your target device. 
 We offer a sample deployment file at `eclispe-symphony/mosquitto/mosquitto.yaml`, which you can use to deploy a [mosquitto](https://mosquitto.org/) test MQTT broker with anoymous access enabled. 
 ```bash
@@ -77,7 +77,7 @@ If you are using Minikube, you'll need to use K8s port forwarding to expose the 
 kubectl port-forward svc/mosquitto-service 1883:1883
 ```
 
-## Prepare Truck Templates
+## Prepare truck templates
 When a truck docks at a field office, a Symphony workflow (`Campaign`) is executed to register the truck as a `Target` object with Symphony, using a predefined truck template. We offer four sample truck templates (as Catalog objects) under the `eclipse-symphony/truck-templates` folder:
 
 | Template (Catalog) | Description |
@@ -114,13 +114,13 @@ reefer-truck-v-v1    106s
 
 > **NOTE:** If you are using a local mosquitto broker, you need to update `brokerAddress` in the templates to `tcp://localhost:1883`. 
 
-## Prepare Truck Docking Workflow
+## Prepare the truck docking workflow
 The truck docking workflow is defined as a Symphony `Campaign` object. To define the docker working flow:
 ```kubectl
 kubectl apply -f eclipse-symphony/workflows/docking.yaml
 ```
 
-## Deploy Symphony Sample Portal (Opera)
+## Deploy Symphony sample portal (Opera)
 
 To deploy Symphony sample portal, review the `eclipse-symphony/portal/opera-deployment.yaml` file. Especially, if you want to use OpenAI features, you need to set `OPENAI_API_KEY` to your OpenAI API key. Then, you can deploy the portal using `kubectl`:
 
@@ -133,7 +133,7 @@ If you are using Minikube, you'll need to use K8s port forwarding to expose the 
 kubectl port-forward svc/opera-service 3000:3000
 ```
 
-## Docking a Mock Truck
+## Docking a mock truck
 To test out the docking workflow, you can create an `Activation` object to activate the above `Campaign`. For example, the following activation activates the docking workflow using the `mock-truck` template:
 
 ```yaml
@@ -169,7 +169,7 @@ You can also see these targets on the Opera targets view if you've deployed Oper
 ![opera](../docs/diagrams/opera-targets.png)
 
 
-## Generating a Symphony Agent Configuration
+## Generating a Symphony agent configuration
 You can generate a Symphony Agent configuration file using `maestro` (see [Installing Symphony](#installing-symphony) section for instructions to install `maestro` using a single command).
 
 Run `maestro` with the following paramters:
@@ -186,7 +186,7 @@ maestro agent --mqtt-broker tcp://172.179.118.110:1883 --mqtt-client-id box-truc
 ```
 The above command generates a `symphony-agent-box-truck.json` file under the `<you home>/.symphony` folder. We also provides sample agent configuration files under the `eclipse-symphony/agent` folder for your reference.
 
-## Customizing the Agent Configuration File
+## Customizing the agent configuration file
 
 By default, the generated agent configuration file uses a mock Target provider (providers.target.mock). You can switch to a different Target Provider as needed - such as using a script provider, a Docker provider, or a custom provider (requires rebuild Symphony binary).
 
@@ -206,7 +206,7 @@ You can switch to a Docker provider:
 ```
 
 
-## Launching the Agent
+## Launching the agent
 
 Once you've created the customized agent configuration file, you can launch a new instance of Symphony Agent through command line:
 
@@ -215,3 +215,25 @@ Once you've created the customized agent configuration file, you can launch a ne
 # for example
 ~/.symphony/symphony-api -c ~/.symphony/symphony-agent-box-truck.json -l Debug
 ```
+
+## Deploying sample applications
+
+We offer a few sample applications that you can use for quick tests.
+
+| Solution | Target | Instance | Description |
+|--------|--------|--------|--------|
+|`box-solution.yaml` | `box-truck`| `box-instance.yaml` | Deploy a Redis container to the box truck, which uses a Docker provider |
+
+### To define and deploy the box truck application
+```bash
+ kubectl apply -f eclipse-symphony/solution/box-solution.yaml 
+ kubectl apply -f eclipse-symphony/solution/box-instance.yaml
+ ```
+ This deployes a Redis container to your target machine. If you use `docker ps` you should see the container running.
+ Optionally, you can use `docker rm -r <container id>` to remove the container and observe Symphony brings it back to its desired state.
+
+ To delete the app, use:
+ ```bash
+ kubectl delete instance box-instance
+ ```
+ You should obseve the Docker container removed from your machine.
