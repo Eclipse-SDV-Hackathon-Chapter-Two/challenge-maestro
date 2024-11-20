@@ -1,0 +1,17 @@
+apiVersion: solution.symphony/v1
+kind: SolutionContainer
+metadata:
+  name: box-truck-app
+spec:
+---
+apiVersion: solution.symphony/v1
+kind: Solution
+metadata: 
+  name: box-truck-app-v-v1
+spec:
+  rootResource: box-truck-app
+  components:
+  - name: local-cache
+    type: container
+    properties:
+      container.image: "redis:latest"

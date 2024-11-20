@@ -80,6 +80,8 @@ The simulated truck is a Docker container that you can extend in several ways:
 
 Please refer to [this document](./eclipse-symphony/README.md) for instructions on running this scenario.
 
+You can also refers to our [YouTube paylist](https://www.youtube.com/playlist?list=PL1Gb3CbZUUEpCs1C3NUnZYoZ_tyWVOm-r) for video tutorials.
+
 ### Other Sample Scenarios
 - [Smart Trailer](./scenarios/smart_trailer_use_case/README.md)
 - Leverage OpenAI to enhance the vehicle’s user experience. You could develop an application that uses OpenAI’s GPT model to power an in-vehicle virtual assistant.

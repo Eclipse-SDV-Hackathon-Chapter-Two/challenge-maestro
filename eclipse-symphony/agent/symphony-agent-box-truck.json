@@ -31,8 +31,8 @@
               "poll.enabled": "true"
             },
             "providers": {
-              "box-truck": {
-                "type": "providers.target.mock",
+              "instance": {
+                "type": "providers.target.docker",
                 "config": {}
               },
               "mem-state": {
@@ -57,7 +57,7 @@
     {
       "type": "bindings.mqtt",
       "config": {
-        "brokerAddress": "tcp://172.179.118.110:1883",
+        "brokerAddress": "tcp://localhost:1883",
         "clientID": "box-truck",
         "requestTopic": "coa-request",
         "responseTopic": "coa-response"
